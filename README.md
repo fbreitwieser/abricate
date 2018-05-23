@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/tseemann/abricate.svg?branch=master)](https://travis-ci.org/tseemann/abricate) [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-Changes in this fork (fbreitwieser/abricate): Added option --blastopts for custom BLAST+ arguments, such as `-word_size`.
+Changes in this fork (fbreitwieser/abricate): Added options `--blastopts` and `--evalue` to support customizing BLAST+ arguments.
 
 # ABRicate
 
