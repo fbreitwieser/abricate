@@ -14,7 +14,7 @@ use Cwd qw(abs_path);
 #..............................................................................
 # Globals needed before --help etc
 
-my $VERSION = "0.8.2";
+my $VERSION = "0.8.2-FB";
 my $EXE = just_filename( $FindBin::RealScript );
 my $AUTHOR = 'Torsten Seemann';
 my $EMAIL = 'torsten.seemann@gmail.com';
@@ -24,7 +24,7 @@ my $URL = 'https://github.com/tseemann/abricate';
 # Command line options
 
 my(@Options, $debug, $quiet, $setupdb, $list, $summary, $check,
-             $datadir, $db, $minid, $mincov, $threads,
+             $datadir, $db, $minid, $mincov, $threads, $blastopts,
              $noheader, $csv, $nopath);
 setOptions();
 
@@ -90,6 +90,13 @@ for my $blast ('blastn', 'blastx') {
   $1 >= 2.30 or err("You need to install BLAST+ 2.2.30 or higher");
 }
 
+my @std_blastopts = qw/task dust perc_identity seg outfmt num_threads evalue culling_limit max_target_seqs db/;
+foreach (@std_blastopts) {
+  if ($blastopts =~ /-$_/) {
+    err("Cannot specify -$_ in --blastopts, as it is set by abricate");
+  }
+}
+
 # check database exists
 $datadir = abs_path($datadir);
 my $db_path = "$datadir/$db/sequences";
@@ -117,6 +124,7 @@ for my $file (@ARGV) {
           . " $blastcmd -db \Q$db_path\E -outfmt '$format' -num_threads $threads"
           . " -evalue 1E-20 -culling_limit $CULL"
           . " -max_target_seqs ".$dbinfo->{SEQUENCES}
+          . " $blastopts"
           . ") 2>&1"
           ;
 
@@ -407,6 +415,7 @@ sub setOptions {
     {OPT=>"mincov=f",  VAR=>\$mincov, DEFAULT=>0, DESC=>"Minimum DNA %coverage"},
     {OPT=>"threads=i",  VAR=>\$threads, DEFAULT=>1, DESC=>"Use this many BLAST+ threads"},
     {OPT=>"nopath!",  VAR=>\$nopath, DEFAULT=>0, DESC=>"Strip filename paths from FILE column"},
+    {OPT=>"blastopts=s", VAR=>\$blastopts, DEFAULT=>undef, DESC=>"Experimental: Additional BLAST+ options, e.g. -word_size or -gapopen."},
   );
 
   @ARGV or usage(1);
