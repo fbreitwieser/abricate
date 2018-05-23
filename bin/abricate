@@ -25,7 +25,7 @@ my $URL = 'https://github.com/tseemann/abricate';
 # Command line options
 
 my(@Options, $debug, $quiet, $setupdb, $list, $summary, $check,
-             $datadir, $db, $minid, $mincov, $threads, $blastopts,
+             $datadir, $db, $minid, $mincov, $minevalue, $threads, $blastopts,
              $noheader, $csv, $nopath);
 setOptions();
 
@@ -121,11 +121,12 @@ for my $file (@ARGV) {
                : "blastx -task blastx-fast -seg no"
                ;
 
+  $blastcmd .= " $blastopts" if defined $blastopts;
+
   my $cmd = "(gzip -d -c -f \Q$file\E | seqret -auto -filter -osformat2 fasta |"
           . " $blastcmd -db \Q$db_path\E -outfmt '$format' -num_threads $threads"
-          . " -evalue 1E-20 -culling_limit $CULL"
+          . " -evalue $minevalue -culling_limit $CULL"
           . " -max_target_seqs ".$dbinfo->{SEQUENCES}
-          . " $blastopts"
           . ") 2>&1"
           ;
 
@@ -414,9 +415,10 @@ sub setOptions {
     {OPT=>"csv!",  VAR=>\$csv, DEFAULT=>0, DESC=>"Output CSV instead of TSV"},
     {OPT=>"minid=f",  VAR=>\$minid, DEFAULT=>75, DESC=>"Minimum DNA %identity"},
     {OPT=>"mincov=f",  VAR=>\$mincov, DEFAULT=>0, DESC=>"Minimum DNA %coverage"},
+    {OPT=>"minevalue=s", VAR=>\$minevalue, DEFAULT=>'1E-20', DESC=>"Minimum e-value"},
     {OPT=>"threads=i",  VAR=>\$threads, DEFAULT=>1, DESC=>"Use this many BLAST+ threads"},
     {OPT=>"nopath!",  VAR=>\$nopath, DEFAULT=>0, DESC=>"Strip filename paths from FILE column"},
-    {OPT=>"blastopts=s", VAR=>\$blastopts, DEFAULT=>undef, DESC=>"Experimental: Additional BLAST+ options, e.g. -word_size or -gapopen"},
+    {OPT=>"blastopts=s", VAR=>\$blastopts, DESC=>"Experimental: Additional BLAST+ options, e.g. -word_size or -gapopen"},
   );
 
   @ARGV or usage(1);
