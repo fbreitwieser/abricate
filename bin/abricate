@@ -7,6 +7,7 @@ use Data::Dumper;
 use FindBin;
 use File::Spec;
 use File::Slurp;
+use File::Basename;
 use List::MoreUtils qw(zip);
 use Cwd qw(abs_path);
 #use lib "$FindBin::RealBin/../perl5";
@@ -407,7 +408,7 @@ sub setOptions {
     {OPT=>"list!",  VAR=>\$list, DEFAULT=>0, DESC=>"List included databases"},
     {OPT=>"check!",  VAR=>\$check, DEFAULT=>0, DESC=>"Check dependencies are installed"},
     {OPT=>"summary!",  VAR=>\$summary, DEFAULT=>0, DESC=>"Summarize multiple reports into a table"},
-    {OPT=>"datadir=s",  VAR=>\$datadir, DEFAULT=>"$FindBin::RealBin/../db", DESC=>"Location of database folders"},
+    {OPT=>"datadir=s",  VAR=>\$datadir, DEFAULT=>dirname($FindBin::RealBin)."/db", DESC=>"Location of database folders"},
     {OPT=>"db=s",  VAR=>\$db, DEFAULT=>"resfinder", DESC=>"Database to use"},
     {OPT=>"noheader!",  VAR=>\$noheader, DEFAULT=>0, DESC=>"Suppress column header row"},
     {OPT=>"csv!",  VAR=>\$csv, DEFAULT=>0, DESC=>"Output CSV instead of TSV"},
@@ -415,7 +416,7 @@ sub setOptions {
     {OPT=>"mincov=f",  VAR=>\$mincov, DEFAULT=>0, DESC=>"Minimum DNA %coverage"},
     {OPT=>"threads=i",  VAR=>\$threads, DEFAULT=>1, DESC=>"Use this many BLAST+ threads"},
     {OPT=>"nopath!",  VAR=>\$nopath, DEFAULT=>0, DESC=>"Strip filename paths from FILE column"},
-    {OPT=>"blastopts=s", VAR=>\$blastopts, DEFAULT=>undef, DESC=>"Experimental: Additional BLAST+ options, e.g. -word_size or -gapopen."},
+    {OPT=>"blastopts=s", VAR=>\$blastopts, DEFAULT=>undef, DESC=>"Experimental: Additional BLAST+ options, e.g. -word_size or -gapopen"},
   );
 
   @ARGV or usage(1);
@@ -445,12 +446,21 @@ sub usage {
   print "Options:\n";
   foreach (@Options) {
     my $opt = $_->{OPT};
-    $opt =~ s/!$//;
     $opt =~ s/=s$/ [X]/;
     $opt =~ s/=i$/ [N]/;
     $opt =~ s/=f$/ [n.n]/;
-    printf "\t--%-13s %s%s.\n",$opt,$_->{DESC},
-           defined($_->{DEFAULT}) ? " (default '$_->{DEFAULT}')" : "";
+    my $is_binary_opt = $opt eq $_->{OPT};
+    $opt =~ s/!$//;
+    printf "\t--%-13s %s",$opt,$_->{DESC};
+    if (defined $_->{DEFAULT} && !($is_binary_opt && $_->{DEFAULT} eq 0)) {
+      my $is_numeric = $_->{DEFAULT} =~ /^\d+?$/;
+      if ($is_numeric) {
+        print " (default $_->{DEFAULT})";   
+      } else {
+        print " (default '$_->{DEFAULT}')";
+      }
+    }
+    print ".\n";
   }
   print "Documentation:\n\t$URL\n";
   exit($exitcode);
